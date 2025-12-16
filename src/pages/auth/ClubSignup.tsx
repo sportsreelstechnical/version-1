@@ -3,11 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, User, Mail, Phone, Building, Globe, Trophy } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import SearchableDropdown from '../../components/SearchableDropdown';
+import { countries } from '../../data/countries';
 
 const ClubSignup: React.FC = () => {
   const [formData, setFormData] = useState({
     adminName: '',
     email: '',
+    countryCode: '+91',
     phone: '',
     clubName: '',
     clubEmail: '',
@@ -27,11 +30,16 @@ const ClubSignup: React.FC = () => {
       alert('Passwords do not match');
       return;
     }
-    
+
     setLoading(true);
-    const success = await signup({ ...formData, role: 'club' });
+    const phoneWithCode = `${formData.countryCode} ${formData.phone}`;
+    const success = await signup({
+      ...formData,
+      phone: phoneWithCode,
+      role: 'club'
+    });
     setLoading(false);
-    
+
     if (success) {
       navigate('/dashboard');
     } else {
@@ -42,6 +50,17 @@ const ClubSignup: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  const handleDropdownChange = (name: string, value: string) => {
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const countryCodeOptions = countries.map(country => ({
+    value: country.dialCode,
+    label: country.dialCode,
+    icon: country.flag,
+    subtitle: country.name
+  }));
 
   return (
     <div className="min-h-screen bg-black flex">
@@ -123,15 +142,32 @@ const ClubSignup: React.FC = () => {
                 />
               </div>
 
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Phone Number"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500"
-                required
-              />
+              <div>
+                <label className="block text-gray-300 text-sm font-medium mb-2">
+                  Mobile Number
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <SearchableDropdown
+                      options={countryCodeOptions}
+                      value={formData.countryCode}
+                      onChange={(value) => handleDropdownChange('countryCode', value)}
+                      placeholder="Code"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <input
+                      type="tel"
+                      name="phone"
+                      placeholder="Phone Number"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <input
