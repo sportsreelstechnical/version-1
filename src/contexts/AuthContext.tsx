@@ -187,9 +187,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             website: userData.website || null,
             division: userData.division,
             league: userData.league,
-            country: 'Unknown',
+            country: userData.country || 'Unknown',
             contact_email: userData.clubEmail || userData.email,
-            contact_phone: userData.phone
+            contact_phone: userData.clubPhone || userData.phone,
+            founded_year: userData.foundedYear || null
           });
 
         if (clubError) {

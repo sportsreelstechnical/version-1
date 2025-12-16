@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Landing from './pages/Landing';
 import RoleSelection from './pages/RoleSelection';
 import ClubSignup from './pages/auth/ClubSignup';
+import ClubSignupMultiStep from './pages/auth/ClubSignupMultiStep';
 import ScoutSignup from './pages/auth/ScoutSignup';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/Dashboard';
@@ -58,7 +59,8 @@ const AppRoutes: React.FC = () => {
       {/* Public Routes */}
       <Route path="/" element={<Landing />} />
       <Route path="/role-selection" element={<RoleSelection />} />
-      <Route path="/signup/club" element={<ClubSignup />} />
+      <Route path="/signup/club" element={<ClubSignupMultiStep />} />
+      <Route path="/signup/club-old" element={<ClubSignup />} />
       <Route path="/signup/scout" element={<ScoutSignup />} />
       <Route path="/login" element={<Login />} />
 
