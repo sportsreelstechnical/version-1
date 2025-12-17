@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building, Shield } from 'lucide-react';
+import { Building, Shield, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Login: React.FC = () => {
@@ -10,14 +10,14 @@ const Login: React.FC = () => {
     password: ''
   });
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<'club' | 'scout'>('club');
+  const [selectedRole, setSelectedRole] = useState<'club' | 'scout' | 'player'>('club');
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Get role from navigation state if provided
   useEffect(() => {
-    const state = location.state as { role?: 'club' | 'scout' };
+    const state = location.state as { role?: 'club' | 'scout' | 'player' };
     if (state?.role) {
       setSelectedRole(state.role);
     }
@@ -65,40 +65,58 @@ const Login: React.FC = () => {
         {/* Role Selection */}
         <div className="mb-6">
           <label className="block text-gray-300 text-sm font-medium mb-3">Login as:</label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <button
               type="button"
               onClick={() => setSelectedRole('club')}
-              className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-colors ${
+              className={`flex flex-col items-center space-y-2 p-4 rounded-lg border-2 transition-colors ${
                 selectedRole === 'club'
                   ? 'border-blue-500 bg-blue-500 bg-opacity-10'
                   : 'border-gray-600 hover:border-gray-500'
               }`}
             >
-              <Building className={`${selectedRole === 'club' ? 'text-blue-400' : 'text-gray-400'}`} size={20} />
-              <div className="text-left">
+              <Building className={`${selectedRole === 'club' ? 'text-blue-400' : 'text-gray-400'}`} size={24} />
+              <div className="text-center">
                 <div className={`font-medium ${selectedRole === 'club' ? 'text-blue-400' : 'text-gray-300'}`}>
                   Club
                 </div>
-                <div className="text-xs text-gray-400">Team Manager</div>
+                <div className="text-xs text-gray-400">Manager</div>
               </div>
             </button>
 
             <button
               type="button"
               onClick={() => setSelectedRole('scout')}
-              className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-colors ${
+              className={`flex flex-col items-center space-y-2 p-4 rounded-lg border-2 transition-colors ${
                 selectedRole === 'scout'
                   ? 'border-green-500 bg-green-500 bg-opacity-10'
                   : 'border-gray-600 hover:border-gray-500'
               }`}
             >
-              <Shield className={`${selectedRole === 'scout' ? 'text-green-400' : 'text-gray-400'}`} size={20} />
-              <div className="text-left">
+              <Shield className={`${selectedRole === 'scout' ? 'text-green-400' : 'text-gray-400'}`} size={24} />
+              <div className="text-center">
                 <div className={`font-medium ${selectedRole === 'scout' ? 'text-green-400' : 'text-gray-300'}`}>
                   Scout
                 </div>
-                <div className="text-xs text-gray-400">Talent Hunter</div>
+                <div className="text-xs text-gray-400">Hunter</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedRole('player')}
+              className={`flex flex-col items-center space-y-2 p-4 rounded-lg border-2 transition-colors ${
+                selectedRole === 'player'
+                  ? 'border-purple-500 bg-purple-500 bg-opacity-10'
+                  : 'border-gray-600 hover:border-gray-500'
+              }`}
+            >
+              <User className={`${selectedRole === 'player' ? 'text-purple-400' : 'text-gray-400'}`} size={24} />
+              <div className="text-center">
+                <div className={`font-medium ${selectedRole === 'player' ? 'text-purple-400' : 'text-gray-300'}`}>
+                  Player
+                </div>
+                <div className="text-xs text-gray-400">Athlete</div>
               </div>
             </button>
           </div>
@@ -140,7 +158,7 @@ const Login: React.FC = () => {
             disabled={loading}
             className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : `Sign In as ${selectedRole === 'club' ? 'Club' : 'Scout'}`}
+            {loading ? 'Signing in...' : `Sign In as ${selectedRole === 'club' ? 'Club' : selectedRole === 'scout' ? 'Scout' : 'Player'}`}
           </button>
         </form>
 
@@ -168,10 +186,11 @@ const Login: React.FC = () => {
 
         {/* Demo Credentials */}
         <div className="mt-6 p-4 bg-gray-800 rounded-lg">
-          <h4 className="text-white font-medium mb-2">Demo Credentials:</h4>
+          <h4 className="text-white font-medium mb-2">Test Credentials:</h4>
           <div className="text-gray-400 text-sm space-y-1">
-            <p><strong>Club:</strong> club@demo.com / password123</p>
-            <p><strong>Scout:</strong> scout@demo.com / password123</p>
+            <p><strong>Club:</strong> admin@manchesterunited.com / ClubAdmin2024!</p>
+            <p><strong>Scout:</strong> john.thompson@scout.com / Scout2024!</p>
+            <p><strong>Player:</strong> david.wilson@player.com / Player2024!</p>
           </div>
         </div>
       </motion.div>

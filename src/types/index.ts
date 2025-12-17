@@ -1,6 +1,6 @@
 export interface User {
   id: string;
-  role: 'club' | 'scout';
+  role: 'club' | 'scout' | 'player';
   name: string;
   email: string;
   phone: string;

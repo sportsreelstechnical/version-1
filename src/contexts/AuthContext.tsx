@@ -5,7 +5,7 @@ import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, role?: 'club' | 'scout') => Promise<boolean>;
+  login: (email: string, password: string, role?: 'club' | 'scout' | 'player') => Promise<boolean>;
   signup: (userData: any) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
@@ -81,11 +81,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('profile_id', authUser.id)
             .maybeSingle();
           name = scoutData ? `${scoutData.first_name} ${scoutData.last_name}` : 'Scout User';
+        } else if (profile.user_type === 'player') {
+          const { data: playerData } = await supabase
+            .from('players')
+            .select('first_name, last_name')
+            .eq('profile_id', authUser.id)
+            .maybeSingle();
+          name = playerData ? `${playerData.first_name} ${playerData.last_name}` : 'Player User';
         }
 
         const userData: User = {
           id: profile.id,
-          role: profile.user_type as 'club' | 'scout',
+          role: profile.user_type as 'club' | 'scout' | 'player',
           name,
           email: profile.email,
           phone: profile.phone || '',
@@ -99,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (email: string, password: string, role: 'club' | 'scout' = 'club'): Promise<boolean> => {
+  const login = async (email: string, password: string, role: 'club' | 'scout' | 'player' = 'club'): Promise<boolean> => {
     try {
       setLoading(true);
 
