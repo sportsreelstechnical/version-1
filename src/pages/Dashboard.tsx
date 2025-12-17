@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Upload, Brain, Star, TrendingUp, Calendar, MoreVertical, Eye, ExternalLink, Bell, User, ChevronDown, Settings, Building } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/Layout/Sidebar';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+import AddStaffModal from '../components/modals/AddStaffModal';
 
 const mockPlayers = [
   {
@@ -156,11 +158,42 @@ const mockNotifications = [
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState(mockNotifications);
+  const [showStaffModal, setShowStaffModal] = useState(false);
+  const [clubId, setClubId] = useState<string>('');
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  useEffect(() => {
+    if (location.state?.showStaffModal) {
+      fetchClubId();
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location]);
+
+  const fetchClubId = async () => {
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+
+      const { data: clubData, error } = await supabase
+        .from('clubs')
+        .select('id')
+        .eq('profile_id', authUser.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (clubData) {
+        setClubId(clubData.id);
+        setShowStaffModal(true);
+      }
+    } catch (error) {
+      console.error('Error fetching club ID:', error);
+    }
+  };
 
   const markAsRead = (notificationId: string) => {
     setNotifications(prev => 
@@ -776,12 +809,21 @@ const Dashboard: React.FC = () => {
 
       {/* Click outside to close dropdowns */}
       {(showNotifications || showUserMenu) && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => {
             setShowNotifications(false);
             setShowUserMenu(false);
           }}
+        />
+      )}
+
+      {/* Post-Registration Staff Modal */}
+      {clubId && (
+        <AddStaffModal
+          isOpen={showStaffModal}
+          onClose={() => setShowStaffModal(false)}
+          clubId={clubId}
         />
       )}
     </div>

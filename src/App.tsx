@@ -15,6 +15,7 @@ import ExploreTalent from './pages/ExploreTalent';
 import AIScouting from './pages/AIScouting';
 import ClubProfile from './pages/ClubProfile';
 import ClubHistory from './pages/ClubHistory';
+import StaffManagement from './pages/StaffManagement';
 import Messages from './pages/Messages';
 import Settings from './pages/Settings';
 import Support from './pages/Support';
@@ -141,6 +142,11 @@ const AppRoutes: React.FC = () => {
       <Route path="/club-history" element={
         <ProtectedRoute>
           <ClubHistory />
+        </ProtectedRoute>
+      } />
+      <Route path="/staff" element={
+        <ProtectedRoute>
+          <StaffManagement />
         </ProtectedRoute>
       } />
       <Route path="/messages" element={

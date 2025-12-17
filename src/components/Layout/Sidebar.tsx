@@ -1,18 +1,19 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  Home, 
-  Users, 
-  Upload, 
-  Building, 
-  History, 
-  Search, 
-  Brain, 
-  Settings, 
+import {
+  Home,
+  Users,
+  Upload,
+  Building,
+  History,
+  Search,
+  Brain,
+  Settings,
   HelpCircle,
   LogOut,
   CreditCard,
-  MessageCircle
+  MessageCircle,
+  UserCog
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -28,6 +29,7 @@ const Sidebar: React.FC = () => {
     { icon: Brain, label: 'AI Scouting', href: '/ai-scouting' },
     { icon: Building, label: 'Club Profile', href: '/club-profile' },
     { icon: History, label: 'Club History', href: '/club-history' },
+    { icon: UserCog, label: 'Staff Management', href: '/staff' },
     { icon: MessageCircle, label: 'Messages', href: '/messages' },
   ];
 

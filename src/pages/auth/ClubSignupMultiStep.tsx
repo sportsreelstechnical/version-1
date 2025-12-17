@@ -16,25 +16,25 @@ const ClubSignupMultiStep: React.FC = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    // Step 1: Manager Information
+    // Step 1: Club Details
+    clubName: '',
+    sport: '',
+    foundedYear: '',
+    website: '',
+
+    // Step 2: Location & Contact
+    country: '',
+    league: '',
+    division: '',
+    countryCode: '',
+    clubPhone: '',
+
+    // Step 3: Manager Information
     managerName: '',
     managerEmail: '',
     managerPhone: '',
 
-    // Step 2: Location & Contact
-    country: '',
-    countryCode: '',
-    clubPhone: '',
-
-    // Step 3: Club Details
-    clubName: '',
-    sport: '',
-    foundedYear: '',
-    league: '',
-    division: '',
-
-    // Step 4: Additional Information
-    website: '',
+    // Step 4: Security
     password: '',
     confirmPassword: ''
   });
@@ -53,9 +53,7 @@ const ClubSignupMultiStep: React.FC = () => {
 
   // Reset league and division when country or sport changes
   useEffect(() => {
-    if (formData.country && formData.sport) {
-      setFormData(prev => ({ ...prev, league: '', division: '' }));
-    }
+    setFormData(prev => ({ ...prev, league: '', division: '' }));
   }, [formData.country, formData.sport]);
 
   // Reset division when league changes
@@ -84,28 +82,6 @@ const ClubSignupMultiStep: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (step === 1) {
-      if (!formData.managerName.trim()) {
-        newErrors.managerName = 'Manager name is required';
-      }
-      if (!formData.managerEmail.trim()) {
-        newErrors.managerEmail = 'Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(formData.managerEmail)) {
-        newErrors.managerEmail = 'Invalid email format';
-      }
-      if (!formData.managerPhone.trim()) {
-        newErrors.managerPhone = 'Phone number is required';
-      }
-    } else if (step === 2) {
-      if (!formData.country) {
-        newErrors.country = 'Country is required';
-      }
-      if (!formData.countryCode) {
-        newErrors.countryCode = 'Country code is required';
-      }
-      if (!formData.clubPhone.trim()) {
-        newErrors.clubPhone = 'Club phone number is required';
-      }
-    } else if (step === 3) {
       if (!formData.clubName.trim()) {
         newErrors.clubName = 'Club name is required';
       }
@@ -121,11 +97,33 @@ const ClubSignupMultiStep: React.FC = () => {
           newErrors.foundedYear = `Year must be between 1800 and ${currentYear}`;
         }
       }
+    } else if (step === 2) {
+      if (!formData.country) {
+        newErrors.country = 'Country is required';
+      }
       if (!formData.league) {
         newErrors.league = 'League is required';
       }
       if (!formData.division) {
         newErrors.division = 'Division is required';
+      }
+      if (!formData.countryCode) {
+        newErrors.countryCode = 'Country code is required';
+      }
+      if (!formData.clubPhone.trim()) {
+        newErrors.clubPhone = 'Club contact number is required';
+      }
+    } else if (step === 3) {
+      if (!formData.managerName.trim()) {
+        newErrors.managerName = 'Manager name is required';
+      }
+      if (!formData.managerEmail.trim()) {
+        newErrors.managerEmail = 'Email is required';
+      } else if (!/\S+@\S+\.\S+/.test(formData.managerEmail)) {
+        newErrors.managerEmail = 'Invalid email format';
+      }
+      if (!formData.managerPhone.trim()) {
+        newErrors.managerPhone = 'Phone number is required';
       }
     } else if (step === 4) {
       if (!formData.password) {
@@ -189,7 +187,7 @@ const ClubSignupMultiStep: React.FC = () => {
     setLoading(false);
 
     if (success) {
-      navigate('/dashboard');
+      navigate('/dashboard', { state: { showStaffModal: true } });
     } else {
       alert('Signup failed. Please try again.');
     }
@@ -229,9 +227,9 @@ const ClubSignupMultiStep: React.FC = () => {
     : [];
 
   const steps = [
-    { number: 1, title: 'Manager Info', icon: User },
+    { number: 1, title: 'Club Details', icon: Building },
     { number: 2, title: 'Location', icon: MapPin },
-    { number: 3, title: 'Club Details', icon: Building },
+    { number: 3, title: 'Manager Info', icon: User },
     { number: 4, title: 'Security', icon: Lock }
   ];
 
@@ -314,11 +312,171 @@ const ClubSignupMultiStep: React.FC = () => {
               transition={{ duration: 0.3 }}
             >
               <form onSubmit={handleSubmit}>
-                {/* Step 1: Manager Information */}
+                {/* Step 1: Club Details */}
                 {currentStep === 1 && (
                   <div>
+                    <h1 className="text-3xl font-bold text-white mb-2">Club Details</h1>
+                    <p className="text-gray-400 mb-8">Tell us about your club</p>
+
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Club/Team Name <span className="text-pink-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="clubName"
+                          value={formData.clubName}
+                          onChange={handleChange}
+                          placeholder="Enter your club name"
+                          className={`w-full bg-gray-800 border ${
+                            errors.clubName ? 'border-red-500' : 'border-gray-700'
+                          } rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
+                        />
+                        {errors.clubName && (
+                          <p className="mt-1 text-sm text-red-500">{errors.clubName}</p>
+                        )}
+                      </div>
+
+                      <SearchableDropdown
+                        options={sportOptions}
+                        value={formData.sport}
+                        onChange={(value) => handleDropdownChange('sport', value)}
+                        placeholder="Select your sport"
+                        label="Sports Category"
+                        required
+                        error={errors.sport}
+                      />
+
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Year Founded <span className="text-pink-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          name="foundedYear"
+                          value={formData.foundedYear}
+                          onChange={handleChange}
+                          placeholder="e.g., 2010"
+                          min="1800"
+                          max={new Date().getFullYear()}
+                          className={`w-full bg-gray-800 border ${
+                            errors.foundedYear ? 'border-red-500' : 'border-gray-700'
+                          } rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
+                        />
+                        {errors.foundedYear && (
+                          <p className="mt-1 text-sm text-red-500">{errors.foundedYear}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Club Website (Optional)
+                        </label>
+                        <input
+                          type="url"
+                          name="website"
+                          value={formData.website}
+                          onChange={handleChange}
+                          placeholder="https://yourclub.com"
+                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Location & Contact */}
+                {currentStep === 2 && (
+                  <div>
+                    <h1 className="text-3xl font-bold text-white mb-2">Location & Contact</h1>
+                    <p className="text-gray-400 mb-8">Where is your club located?</p>
+
+                    <div className="space-y-6">
+                      <SearchableDropdown
+                        options={countryOptions}
+                        value={formData.country}
+                        onChange={(value) => handleDropdownChange('country', value)}
+                        placeholder="Select your country"
+                        label="Country"
+                        required
+                        error={errors.country}
+                      />
+
+                      {formData.country && formData.sport && (
+                        <>
+                          <SearchableDropdown
+                            options={leagueOptions}
+                            value={formData.league}
+                            onChange={(value) => handleDropdownChange('league', value)}
+                            placeholder="Select your league"
+                            label="League"
+                            required
+                            error={errors.league}
+                          />
+
+                          {formData.league && (
+                            <SearchableDropdown
+                              options={divisionOptions}
+                              value={formData.division}
+                              onChange={(value) => handleDropdownChange('division', value)}
+                              placeholder="Select division"
+                              label="Division"
+                              required
+                              error={errors.division}
+                            />
+                          )}
+                        </>
+                      )}
+
+                      {(!formData.country || !formData.sport) && (
+                        <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                          <p className="text-gray-400 text-sm">
+                            Please complete Club Details first to see available leagues
+                          </p>
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          Club Contact Number <span className="text-pink-500">*</span>
+                        </label>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <SearchableDropdown
+                              options={countryCodeOptions}
+                              value={formData.countryCode}
+                              onChange={(value) => handleDropdownChange('countryCode', value)}
+                              placeholder="Code"
+                              error={errors.countryCode}
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <input
+                              type="tel"
+                              name="clubPhone"
+                              value={formData.clubPhone}
+                              onChange={handleChange}
+                              placeholder="Phone number"
+                              className={`w-full bg-gray-800 border ${
+                                errors.clubPhone ? 'border-red-500' : 'border-gray-700'
+                              } rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
+                            />
+                            {errors.clubPhone && (
+                              <p className="mt-1 text-sm text-red-500">{errors.clubPhone}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Manager Information */}
+                {currentStep === 3 && (
+                  <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Manager Information</h1>
-                    <p className="text-gray-400 mb-8">Let's start with your personal details</p>
+                    <p className="text-gray-400 mb-8">Your personal details as club administrator</p>
 
                     <div className="space-y-6">
                       <div>
@@ -381,165 +539,13 @@ const ClubSignupMultiStep: React.FC = () => {
                   </div>
                 )}
 
-                {/* Step 2: Location & Contact */}
-                {currentStep === 2 && (
-                  <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Location & Contact</h1>
-                    <p className="text-gray-400 mb-8">Where is your club located?</p>
-
-                    <div className="space-y-6">
-                      <SearchableDropdown
-                        options={countryOptions}
-                        value={formData.country}
-                        onChange={(value) => handleDropdownChange('country', value)}
-                        placeholder="Select your country"
-                        label="Country"
-                        required
-                        error={errors.country}
-                      />
-
-                      <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
-                          Club Contact Number <span className="text-pink-500">*</span>
-                        </label>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <SearchableDropdown
-                              options={countryCodeOptions}
-                              value={formData.countryCode}
-                              onChange={(value) => handleDropdownChange('countryCode', value)}
-                              placeholder="Code"
-                              error={errors.countryCode}
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <input
-                              type="tel"
-                              name="clubPhone"
-                              value={formData.clubPhone}
-                              onChange={handleChange}
-                              placeholder="Phone number"
-                              className={`w-full bg-gray-800 border ${
-                                errors.clubPhone ? 'border-red-500' : 'border-gray-700'
-                              } rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
-                            />
-                            {errors.clubPhone && (
-                              <p className="mt-1 text-sm text-red-500">{errors.clubPhone}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 3: Club Details */}
-                {currentStep === 3 && (
-                  <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Club Details</h1>
-                    <p className="text-gray-400 mb-8">Tell us about your club</p>
-
-                    <div className="space-y-6">
-                      <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
-                          Club/Team Name <span className="text-pink-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="clubName"
-                          value={formData.clubName}
-                          onChange={handleChange}
-                          placeholder="Enter your club name"
-                          className={`w-full bg-gray-800 border ${
-                            errors.clubName ? 'border-red-500' : 'border-gray-700'
-                          } rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
-                        />
-                        {errors.clubName && (
-                          <p className="mt-1 text-sm text-red-500">{errors.clubName}</p>
-                        )}
-                      </div>
-
-                      <SearchableDropdown
-                        options={sportOptions}
-                        value={formData.sport}
-                        onChange={(value) => handleDropdownChange('sport', value)}
-                        placeholder="Select your sport"
-                        label="Sports Category"
-                        required
-                        error={errors.sport}
-                      />
-
-                      <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
-                          Year Founded <span className="text-pink-500">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          name="foundedYear"
-                          value={formData.foundedYear}
-                          onChange={handleChange}
-                          placeholder="e.g., 2010"
-                          min="1800"
-                          max={new Date().getFullYear()}
-                          className={`w-full bg-gray-800 border ${
-                            errors.foundedYear ? 'border-red-500' : 'border-gray-700'
-                          } rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
-                        />
-                        {errors.foundedYear && (
-                          <p className="mt-1 text-sm text-red-500">{errors.foundedYear}</p>
-                        )}
-                      </div>
-
-                      {formData.country && formData.sport && (
-                        <>
-                          <SearchableDropdown
-                            options={leagueOptions}
-                            value={formData.league}
-                            onChange={(value) => handleDropdownChange('league', value)}
-                            placeholder="Select your league"
-                            label="League"
-                            required
-                            error={errors.league}
-                          />
-
-                          {formData.league && (
-                            <SearchableDropdown
-                              options={divisionOptions}
-                              value={formData.division}
-                              onChange={(value) => handleDropdownChange('division', value)}
-                              placeholder="Select division"
-                              label="Division"
-                              required
-                              error={errors.division}
-                            />
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 4: Additional Information */}
+                {/* Step 4: Security */}
                 {currentStep === 4 && (
                   <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Almost Done!</h1>
-                    <p className="text-gray-400 mb-8">Final details to complete your registration</p>
+                    <h1 className="text-3xl font-bold text-white mb-2">Secure Your Account</h1>
+                    <p className="text-gray-400 mb-8">Create a strong password to protect your club dashboard</p>
 
                     <div className="space-y-6">
-                      <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
-                          Club Website (Optional)
-                        </label>
-                        <input
-                          type="url"
-                          name="website"
-                          value={formData.website}
-                          onChange={handleChange}
-                          placeholder="https://yourclub.com"
-                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500"
-                        />
-                      </div>
-
                       <div>
                         <label className="block text-gray-300 text-sm font-medium mb-2">
                           Password <span className="text-pink-500">*</span>
