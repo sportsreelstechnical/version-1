@@ -5,7 +5,7 @@ import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, role?: 'club' | 'scout' | 'player') => Promise<boolean>;
+  login: (email: string, password: string, role?: 'club' | 'scout' | 'player' | 'staff') => Promise<boolean>;
   signup: (userData: any) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
@@ -88,11 +88,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('profile_id', authUser.id)
             .maybeSingle();
           name = playerData ? `${playerData.first_name} ${playerData.last_name}` : 'Player User';
+        } else if (profile.user_type === 'staff') {
+          const { data: staffData } = await supabase
+            .from('club_staff')
+            .select('staff_name, club_id')
+            .eq('profile_id', authUser.id)
+            .maybeSingle();
+          name = staffData?.staff_name || 'Staff User';
+
+          const userData: User = {
+            id: profile.id,
+            role: 'staff',
+            name,
+            email: profile.email,
+            phone: profile.phone || '',
+            createdAt: profile.created_at,
+            clubId: staffData?.club_id,
+            isStaff: true,
+          };
+          setUser(userData);
+          return;
         }
 
         const userData: User = {
           id: profile.id,
-          role: profile.user_type as 'club' | 'scout' | 'player',
+          role: profile.user_type as 'club' | 'scout' | 'player' | 'staff',
           name,
           email: profile.email,
           phone: profile.phone || '',
@@ -106,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (email: string, password: string, role: 'club' | 'scout' | 'player' = 'club'): Promise<boolean> => {
+  const login = async (email: string, password: string, role: 'club' | 'scout' | 'player' | 'staff' = 'club'): Promise<boolean> => {
     try {
       setLoading(true);
 

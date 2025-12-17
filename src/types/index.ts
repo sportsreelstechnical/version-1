@@ -1,10 +1,12 @@
 export interface User {
   id: string;
-  role: 'club' | 'scout' | 'player';
+  role: 'club' | 'scout' | 'player' | 'staff';
   name: string;
   email: string;
   phone: string;
   createdAt: string;
+  clubId?: string;
+  isStaff?: boolean;
 }
 
 export interface Club {
