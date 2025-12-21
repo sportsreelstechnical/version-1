@@ -9,7 +9,7 @@ import ScoutSignup from './pages/auth/ScoutSignup';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/Dashboard';
 import PlayerManagement from './pages/PlayerManagement';
-import MatchesUpload from './pages/MatchesUpload';
+import MatchesUpload from './pages/MatchesUploadEnhanced';
 import PlayerTransfers from './pages/PlayerTransfers';
 import ExploreTalent from './pages/ExploreTalent';
 import AIScouting from './pages/AIScouting';
