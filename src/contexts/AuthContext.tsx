@@ -42,8 +42,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const checkSession = async () => {
+    console.time('⏱️ [AUTH] checkSession - Total');
     try {
+      console.time('⏱️ [AUTH] getSession');
       const { data: { session } } = await supabase.auth.getSession();
+      console.timeEnd('⏱️ [AUTH] getSession');
+
       if (session) {
         await loadUserData(session.user);
       }
@@ -51,49 +55,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error checking session:', error);
     } finally {
       setLoading(false);
+      console.timeEnd('⏱️ [AUTH] checkSession - Total');
     }
   };
 
   const loadUserData = async (authUser: AuthUser) => {
+    console.time('⏱️ [AUTH] loadUserData - Total');
     try {
+      console.time('⏱️ [AUTH] Query profiles table');
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', authUser.id)
         .maybeSingle();
+      console.timeEnd('⏱️ [AUTH] Query profiles table');
 
       if (profileError) throw profileError;
 
       if (profile) {
+        console.log(`📊 [AUTH] User type detected: ${profile.user_type}`);
         let name = '';
 
         if (profile.user_type === 'club') {
+          console.time('⏱️ [AUTH] Query clubs table');
           const { data: clubData } = await supabase
             .from('clubs')
             .select('club_name')
             .eq('profile_id', authUser.id)
             .maybeSingle();
+          console.timeEnd('⏱️ [AUTH] Query clubs table');
           name = clubData?.club_name || 'Club User';
         } else if (profile.user_type === 'scout') {
+          console.time('⏱️ [AUTH] Query scouts table');
           const { data: scoutData } = await supabase
             .from('scouts')
             .select('first_name, last_name')
             .eq('profile_id', authUser.id)
             .maybeSingle();
+          console.timeEnd('⏱️ [AUTH] Query scouts table');
           name = scoutData ? `${scoutData.first_name} ${scoutData.last_name}` : 'Scout User';
         } else if (profile.user_type === 'player') {
+          console.time('⏱️ [AUTH] Query players table');
           const { data: playerData } = await supabase
             .from('players')
             .select('first_name, last_name')
             .eq('profile_id', authUser.id)
             .maybeSingle();
+          console.timeEnd('⏱️ [AUTH] Query players table');
           name = playerData ? `${playerData.first_name} ${playerData.last_name}` : 'Player User';
         } else if (profile.user_type === 'staff') {
+          console.time('⏱️ [AUTH] Query club_staff table');
           const { data: staffData } = await supabase
             .from('club_staff')
             .select('staff_name, club_id')
             .eq('profile_id', authUser.id)
             .maybeSingle();
+          console.timeEnd('⏱️ [AUTH] Query club_staff table');
           name = staffData?.staff_name || 'Staff User';
 
           const userData: User = {
@@ -106,7 +123,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             clubId: staffData?.club_id,
             isStaff: true,
           };
+          console.log('✅ [AUTH] Staff user data loaded successfully');
           setUser(userData);
+          console.timeEnd('⏱️ [AUTH] loadUserData - Total');
           return;
         }
 
@@ -119,21 +138,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: profile.created_at
         };
 
+        console.log('✅ [AUTH] User data loaded successfully');
         setUser(userData);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
+    } finally {
+      console.timeEnd('⏱️ [AUTH] loadUserData - Total');
     }
   };
 
   const login = async (email: string, password: string, role: 'club' | 'scout' | 'player' | 'staff' = 'club'): Promise<boolean> => {
+    console.time('⏱️ [AUTH] login - Total Flow');
     try {
       setLoading(true);
 
+      console.time('⏱️ [AUTH] signInWithPassword');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
+      console.timeEnd('⏱️ [AUTH] signInWithPassword');
 
       if (error) {
         console.error('Login error:', error.message);
@@ -141,18 +166,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
+        console.time('⏱️ [AUTH] Role verification query');
         const { data: profile } = await supabase
           .from('profiles')
           .select('user_type')
           .eq('id', data.user.id)
           .maybeSingle();
+        console.timeEnd('⏱️ [AUTH] Role verification query');
 
         if (profile && profile.user_type !== role) {
+          console.time('⏱️ [AUTH] signOut (role mismatch)');
           await supabase.auth.signOut();
+          console.timeEnd('⏱️ [AUTH] signOut (role mismatch)');
           alert(`This account is registered as a ${profile.user_type}. Please select the correct role.`);
           return false;
         }
 
+        console.log(`🔐 [AUTH] Login successful for ${role} user`);
         await loadUserData(data.user);
         return true;
       }
@@ -163,6 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     } finally {
       setLoading(false);
+      console.timeEnd('⏱️ [AUTH] login - Total Flow');
     }
   };
 

@@ -156,6 +156,7 @@ const mockNotifications = [
 ];
 
 const Dashboard: React.FC = () => {
+  console.time('⏱️ [DASHBOARD] Component Mount & Render');
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -167,29 +168,41 @@ const Dashboard: React.FC = () => {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  console.log('📊 [DASHBOARD] User data available:', !!user);
+  console.log('📊 [DASHBOARD] User role:', user?.role || 'none');
+
   useEffect(() => {
+    console.log('🔄 [DASHBOARD] useEffect triggered - checking showStaffModal');
     if (location.state?.showStaffModal) {
+      console.time('⏱️ [DASHBOARD] fetchClubId');
       fetchClubId();
       navigate(location.pathname, { replace: true, state: {} });
     }
+    console.timeEnd('⏱️ [DASHBOARD] Component Mount & Render');
   }, [location]);
 
   const fetchClubId = async () => {
     try {
+      console.time('⏱️ [DASHBOARD] getUser');
       const { data: { user: authUser } } = await supabase.auth.getUser();
+      console.timeEnd('⏱️ [DASHBOARD] getUser');
+
       if (!authUser) return;
 
+      console.time('⏱️ [DASHBOARD] Query clubs for ID');
       const { data: clubData, error } = await supabase
         .from('clubs')
         .select('id')
         .eq('profile_id', authUser.id)
         .maybeSingle();
+      console.timeEnd('⏱️ [DASHBOARD] Query clubs for ID');
 
       if (error) throw error;
       if (clubData) {
         setClubId(clubData.id);
         setShowStaffModal(true);
       }
+      console.timeEnd('⏱️ [DASHBOARD] fetchClubId');
     } catch (error) {
       console.error('Error fetching club ID:', error);
     }
