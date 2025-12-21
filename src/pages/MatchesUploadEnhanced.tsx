@@ -834,52 +834,100 @@ const MatchesUploadEnhanced: React.FC = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">
-                    Select Players ({lineupData.selectedPlayers.length}/11)
-                  </h3>
-                  <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                    {players.map((player) => {
-                      const isSelected = lineupData.selectedPlayers.some(
-                        (p) => p.playerId === player.id
-                      );
-                      return (
-                        <button
-                          key={player.id}
-                          onClick={() => handleAddPlayerToLineup(player)}
-                          className={`w-full p-4 rounded-lg border-2 transition-colors text-left ${
-                            isSelected
-                              ? 'border-blue-500 bg-blue-500 bg-opacity-10'
-                              : 'border-gray-700 hover:border-gray-600'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div
-                                className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                  isSelected
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-700 text-gray-400'
-                                }`}
-                              >
-                                #{player.jerseyNumber}
-                              </div>
-                              <div>
-                                <div className="text-white font-semibold">
-                                  {player.name}
-                                </div>
-                                <div className="text-gray-400 text-sm">
-                                  {player.position}
-                                </div>
-                              </div>
-                            </div>
-                            {isSelected && (
-                              <CheckCircle className="text-blue-400" size={20} />
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-white">
+                      Select Players ({lineupData.selectedPlayers.length}/11)
+                    </h3>
+                    {lineupData.selectedPlayers.length > 0 && (
+                      <button
+                        onClick={() => setLineupData({ ...lineupData, selectedPlayers: [] })}
+                        className="text-red-400 hover:text-red-300 text-sm flex items-center space-x-1"
+                      >
+                        <X size={16} />
+                        <span>Clear All</span>
+                      </button>
+                    )}
                   </div>
+
+                  <div className="bg-blue-900 bg-opacity-30 border border-blue-600 rounded-lg p-3 mb-4">
+                    <p className="text-blue-200 text-sm flex items-start space-x-2">
+                      <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                      <span>
+                        Click on players below to add them to your lineup. Jersey numbers will appear on the formation preview.
+                      </span>
+                    </p>
+                  </div>
+
+                  {players.length === 0 ? (
+                    <div className="bg-gray-800 rounded-lg p-8 text-center">
+                      <Users size={48} className="text-gray-600 mx-auto mb-3" />
+                      <p className="text-gray-400 mb-2">No players available</p>
+                      <p className="text-gray-500 text-sm">Add players to your squad first</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                      {players.map((player) => {
+                        const isSelected = lineupData.selectedPlayers.some(
+                          (p) => p.playerId === player.id
+                        );
+                        return (
+                          <button
+                            key={player.id}
+                            onClick={() => handleAddPlayerToLineup(player)}
+                            className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                              isSelected
+                                ? 'border-blue-500 bg-blue-500 bg-opacity-20 shadow-lg'
+                                : 'border-gray-700 hover:border-gray-600 hover:bg-gray-800'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <div
+                                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-2 ${
+                                    isSelected
+                                      ? 'bg-blue-600 text-white border-blue-400'
+                                      : 'bg-gray-700 text-gray-400 border-gray-600'
+                                  }`}
+                                >
+                                  #{player.jerseyNumber}
+                                </div>
+                                <div>
+                                  <div className="text-white font-semibold text-base">
+                                    {player.name}
+                                  </div>
+                                  <div className="flex items-center space-x-2 text-sm">
+                                    <span className="text-gray-400">{player.position}</span>
+                                    {isSelected && (
+                                      <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs">
+                                        In Lineup
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              {isSelected ? (
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-blue-400 text-sm font-medium">Selected</span>
+                                  <CheckCircle className="text-blue-400" size={24} />
+                                </div>
+                              ) : (
+                                <Plus className="text-gray-500" size={24} />
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {lineupData.selectedPlayers.length === 11 && (
+                    <div className="mt-4 bg-green-900 bg-opacity-30 border border-green-600 rounded-lg p-3">
+                      <p className="text-green-200 text-sm flex items-center space-x-2">
+                        <CheckCircle size={16} />
+                        <span className="font-semibold">Lineup Complete! All 11 positions filled.</span>
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
