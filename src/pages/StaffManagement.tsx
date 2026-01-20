@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Trash2, Key, Search, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import Sidebar from '../components/Layout/Sidebar';
 import AddStaffModal from '../components/modals/AddStaffModal';
 import EditPermissionsModal from '../components/modals/EditPermissionsModal';
 
@@ -118,8 +119,9 @@ const StaffManagement: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="flex min-h-screen bg-black">
+      <Sidebar />
+      <div className="flex-1 p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Staff Management</h1>
@@ -213,10 +215,10 @@ const StaffManagement: React.FC = () => {
             <div><h4 className="font-medium text-gray-300 mb-2">Managing Access</h4><ul className="space-y-1 list-disc list-inside"><li>Toggle status activation</li><li>Reset credentials if needed</li><li>Remove staff permanently</li></ul></div>
           </div>
         </div>
-      </div>
 
-      <AddStaffModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} clubId={clubId} onSuccess={fetchStaff} />
-      {selectedStaff && (<EditPermissionsModal isOpen={showPermissionsModal} onClose={() => { setShowPermissionsModal(false); setSelectedStaff(null); }} staffId={selectedStaff.id} staffName={selectedStaff.name} onSuccess={fetchStaff} />)}
+        <AddStaffModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} clubId={clubId} onSuccess={fetchStaff} />
+        {selectedStaff && (<EditPermissionsModal isOpen={showPermissionsModal} onClose={() => { setShowPermissionsModal(false); setSelectedStaff(null); }} staffId={selectedStaff.id} staffName={selectedStaff.name} onSuccess={fetchStaff} />)}
+      </div>
     </div>
   );
 };
