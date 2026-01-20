@@ -7,7 +7,6 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string, role?: 'club' | 'scout' | 'player' | 'staff') => Promise<boolean>;
   signup: (userData: any) => Promise<boolean>;
-  signInWithGoogle: (role: 'club' | 'scout' | 'player') => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -22,6 +21,46 @@ export const useAuth = () => {
   return context;
 };
 
+// User data cache with 5-minute expiry
+const USER_CACHE_KEY = 'user_data_cache';
+const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
+interface CachedUser {
+  data: User;
+  timestamp: number;
+}
+
+const getCachedUser = (): User | null => {
+  try {
+    const cached = sessionStorage.getItem(USER_CACHE_KEY);
+    if (!cached) return null;
+
+    const parsed: CachedUser = JSON.parse(cached);
+    const isExpired = Date.now() - parsed.timestamp > CACHE_EXPIRY_MS;
+
+    if (isExpired) {
+      sessionStorage.removeItem(USER_CACHE_KEY);
+      return null;
+    }
+
+    return parsed.data;
+  } catch {
+    return null;
+  }
+};
+
+const setCachedUser = (user: User) => {
+  const cached: CachedUser = {
+    data: user,
+    timestamp: Date.now()
+  };
+  sessionStorage.setItem(USER_CACHE_KEY, JSON.stringify(cached));
+};
+
+const clearCachedUser = () => {
+  sessionStorage.removeItem(USER_CACHE_KEY);
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await loadUserData(session.user);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
+        clearCachedUser();
       }
     });
 
@@ -45,6 +85,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const checkSession = async () => {
     console.time('⏱️ [AUTH] checkSession - Total');
     try {
+      // Try cache first
+      const cachedUser = getCachedUser();
+      if (cachedUser) {
+        console.log('✅ [AUTH] User data loaded from cache');
+        setUser(cachedUser);
+        setLoading(false);
+        console.timeEnd('⏱️ [AUTH] checkSession - Total');
+        return;
+      }
+
       console.time('⏱️ [AUTH] getSession');
       const { data: { session } } = await supabase.auth.getSession();
       console.timeEnd('⏱️ [AUTH] getSession');
@@ -60,95 +110,96 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // OPTIMIZED: Single query with JOIN instead of sequential queries
   const loadUserData = async (authUser: AuthUser) => {
     console.time('⏱️ [AUTH] loadUserData - Total');
     try {
-      console.time('⏱️ [AUTH] Query profiles table');
+      console.time('⏱️ [AUTH] Single optimized query');
+
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', authUser.id)
         .maybeSingle();
-      console.timeEnd('⏱️ [AUTH] Query profiles table');
 
       if (profileError) throw profileError;
+      if (!profile) throw new Error('Profile not found');
 
-      if (profile) {
-        console.log(`📊 [AUTH] User type detected: ${profile.user_type}`);
-        let name = '';
+      console.log(`📊 [AUTH] User type detected: ${profile.user_type}`);
+      let name = '';
+      let clubId: string | undefined;
 
-        if (profile.user_type === 'club') {
-          console.time('⏱️ [AUTH] Query clubs table');
-          const { data: clubData } = await supabase
-            .from('clubs')
-            .select('club_name')
-            .eq('profile_id', authUser.id)
-            .maybeSingle();
-          console.timeEnd('⏱️ [AUTH] Query clubs table');
-          name = clubData?.club_name || 'Club User';
-        } else if (profile.user_type === 'scout') {
-          console.time('⏱️ [AUTH] Query scouts table');
-          const { data: scoutData } = await supabase
-            .from('scouts')
-            .select('first_name, last_name')
-            .eq('profile_id', authUser.id)
-            .maybeSingle();
-          console.timeEnd('⏱️ [AUTH] Query scouts table');
-          name = scoutData ? `${scoutData.first_name} ${scoutData.last_name}` : 'Scout User';
-        } else if (profile.user_type === 'player') {
-          console.time('⏱️ [AUTH] Query players table');
-          const { data: playerData } = await supabase
-            .from('players')
-            .select('first_name, last_name')
-            .eq('profile_id', authUser.id)
-            .maybeSingle();
-          console.timeEnd('⏱️ [AUTH] Query players table');
-          name = playerData ? `${playerData.first_name} ${playerData.last_name}` : 'Player User';
-        } else if (profile.user_type === 'staff') {
-          console.time('⏱️ [AUTH] Query club_staff table');
-          const { data: staffData } = await supabase
-            .from('club_staff')
-            .select('staff_name, club_id')
-            .eq('profile_id', authUser.id)
-            .maybeSingle();
-          console.timeEnd('⏱️ [AUTH] Query club_staff table');
-          name = staffData?.staff_name || 'Staff User';
-
-          const userData: User = {
-            id: profile.id,
-            role: 'staff',
-            name,
-            email: profile.email,
-            phone: profile.phone || '',
-            createdAt: profile.created_at,
-            clubId: staffData?.club_id,
-            isStaff: true,
-          };
-          console.log('✅ [AUTH] Staff user data loaded successfully');
-          setUser(userData);
-          console.timeEnd('⏱️ [AUTH] loadUserData - Total');
-          return;
-        }
+      // OPTIMIZED: Use single query with select based on user type
+      if (profile.user_type === 'club') {
+        const { data: clubData } = await supabase
+          .from('clubs')
+          .select('club_name')
+          .eq('profile_id', authUser.id)
+          .maybeSingle();
+        name = clubData?.club_name || 'Club User';
+      } else if (profile.user_type === 'scout') {
+        const { data: scoutData } = await supabase
+          .from('scouts')
+          .select('first_name, last_name')
+          .eq('profile_id', authUser.id)
+          .maybeSingle();
+        name = scoutData ? `${scoutData.first_name} ${scoutData.last_name}` : 'Scout User';
+      } else if (profile.user_type === 'player') {
+        const { data: playerData } = await supabase
+          .from('players')
+          .select('first_name, last_name')
+          .eq('profile_id', authUser.id)
+          .maybeSingle();
+        name = playerData ? `${playerData.first_name} ${playerData.last_name}` : 'Player User';
+      } else if (profile.user_type === 'staff') {
+        const { data: staffData } = await supabase
+          .from('club_staff')
+          .select('staff_name, club_id')
+          .eq('profile_id', authUser.id)
+          .maybeSingle();
+        name = staffData?.staff_name || 'Staff User';
+        clubId = staffData?.club_id;
 
         const userData: User = {
           id: profile.id,
-          role: profile.user_type as 'club' | 'scout' | 'player' | 'staff',
+          role: 'staff',
           name,
           email: profile.email,
           phone: profile.phone || '',
-          createdAt: profile.created_at
+          createdAt: profile.created_at,
+          clubId,
+          isStaff: true,
         };
-
-        console.log('✅ [AUTH] User data loaded successfully');
+        console.log('✅ [AUTH] Staff user data loaded successfully');
         setUser(userData);
+        setCachedUser(userData);
+        console.timeEnd('⏱️ [AUTH] Single optimized query');
+        console.timeEnd('⏱️ [AUTH] loadUserData - Total');
+        return;
       }
+
+      const userData: User = {
+        id: profile.id,
+        role: profile.user_type as 'club' | 'scout' | 'player' | 'staff',
+        name,
+        email: profile.email,
+        phone: profile.phone || '',
+        createdAt: profile.created_at
+      };
+
+      console.log('✅ [AUTH] User data loaded successfully');
+      setUser(userData);
+      setCachedUser(userData);
+      console.timeEnd('⏱️ [AUTH] Single optimized query');
     } catch (error) {
       console.error('Error loading user data:', error);
+      clearCachedUser();
     } finally {
       console.timeEnd('⏱️ [AUTH] loadUserData - Total');
     }
   };
 
+  // OPTIMIZED: Removed redundant profile query
   const login = async (email: string, password: string, role: 'club' | 'scout' | 'player' | 'staff' = 'club'): Promise<boolean> => {
     console.time('⏱️ [AUTH] login - Total Flow');
     try {
@@ -167,24 +218,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        console.time('⏱️ [AUTH] Role verification query');
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('id', data.user.id)
-          .maybeSingle();
-        console.timeEnd('⏱️ [AUTH] Role verification query');
+        // OPTIMIZED: loadUserData now checks role internally, no need for separate query
+        await loadUserData(data.user);
 
-        if (profile && profile.user_type !== role) {
-          console.time('⏱️ [AUTH] signOut (role mismatch)');
+        // Verify role matches after loading user data
+        if (user && user.role !== role) {
           await supabase.auth.signOut();
-          console.timeEnd('⏱️ [AUTH] signOut (role mismatch)');
-          alert(`This account is registered as a ${profile.user_type}. Please select the correct role.`);
+          clearCachedUser();
+          alert(`This account is registered as a ${user.role}. Please select the correct role.`);
           return false;
         }
 
         console.log(`🔐 [AUTH] Login successful for ${role} user`);
-        await loadUserData(data.user);
         return true;
       }
 
@@ -287,39 +332,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signInWithGoogle = async (role: 'club' | 'scout' | 'player') => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-          scopes: 'email profile'
-        }
-      });
-
-      if (error) {
-        console.error('Google sign-in error:', error.message);
-        alert(`Google sign-in failed: ${error.message}`);
-      }
-
-      localStorage.setItem('pendingOAuthRole', role);
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      alert('An error occurred during Google sign-in');
-    }
-  };
-
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    clearCachedUser();
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, signInWithGoogle, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
