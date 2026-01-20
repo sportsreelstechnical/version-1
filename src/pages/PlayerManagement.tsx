@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Plus,
-  Search,
-  Filter,
-  MoreVertical,
-  Edit,
-  Trash2,
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  MoreVertical, 
+  Edit, 
+  Trash2, 
   Eye,
   User,
   Calendar,
@@ -15,11 +15,7 @@ import {
   Activity,
   X,
   ChevronDown,
-  Users,
-  Key,
-  FileText,
-  Download,
-  Star
+  Users
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/Layout/Sidebar';
@@ -297,182 +293,12 @@ const PlayerManagement: React.FC = () => {
     if (formMode === 'add') {
       setPlayers([...players, playerData as Player]);
     } else if (selectedPlayer) {
-      setPlayers(players.map(p =>
+      setPlayers(players.map(p => 
         p.id === selectedPlayer.id ? { ...p, ...playerData } : p
       ));
     }
     setShowPlayerForm(false);
     setSelectedPlayer(null);
-  };
-
-  const handleResetPlayerCredentials = (player: Player) => {
-    if (!confirm(`Reset login credentials for ${player.name}?\n\nThis will generate a new password and the player will need to use the new credentials to log in.`)) {
-      return;
-    }
-
-    const tempPassword = 'SR-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-    const username = player.fifaId;
-
-    alert(
-      `Login credentials reset successfully!\n\n` +
-      `Player: ${player.name}\n` +
-      `Username: ${username}\n` +
-      `Temporary Password: ${tempPassword}\n\n` +
-      `Please share these credentials securely with the player.\n` +
-      `The player will be required to change the password on first login.`
-    );
-  };
-
-  const handleExportScoutReportPDF = (player: Player) => {
-    const reportContent = generateScoutReportText(player);
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `scout-report-${player.name.replace(/\s+/g, '-')}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    alert('Scout report exported successfully!');
-  };
-
-  const handleExportScoutReportExcel = (player: Player) => {
-    const reportData = generateScoutReportCSV(player);
-    const blob = new Blob([reportData], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `scout-report-${player.name.replace(/\s+/g, '-')}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    alert('Scout report exported as CSV successfully!');
-  };
-
-  const generateScoutReportText = (player: Player): string => {
-    return `
-==============================================
-SCOUT REPORT - ${player.name.toUpperCase()}
-==============================================
-
-PERSONAL INFORMATION
---------------------
-Full Name: ${player.name}
-FIFA ID: ${player.fifaId}
-Position: ${player.position}
-Jersey Number: ${player.jerseyNumber}
-Date of Birth: ${new Date(player.dateOfBirth).toLocaleDateString()}
-Age: ${player.age} years
-Nationality: ${player.nationality}
-Place of Birth: ${player.placeOfBirth}
-
-PHYSICAL ATTRIBUTES
--------------------
-Height: ${player.height}
-Weight: ${player.weight}
-Preferred Foot: ${player.preferredFoot}
-
-PERFORMANCE STATISTICS
-----------------------
-Goals: ${player.goals}
-Assists: ${player.assists}
-Matches Played: ${player.matches}
-Goals per Match: ${(player.goals / player.matches).toFixed(2)}
-Assists per Match: ${(player.assists / player.matches).toFixed(2)}
-
-CONTRACT INFORMATION
---------------------
-Contract Expires: ${new Date(player.contractExpiry).toLocaleDateString()}
-Current Status: ${player.status}
-Previous Clubs: ${player.previousClubs}
-
-SCOUTING ASSESSMENT
--------------------
-Overall Rating: ⭐⭐⭐⭐ (4/5)
-
-Technical Skills:
-• Strong ball control and dribbling ability
-• Excellent passing accuracy
-• Good finishing in the penalty area
-• Solid aerial ability
-
-Tactical Awareness:
-• Understands positioning well
-• Makes intelligent runs off the ball
-• Good defensive contribution when required
-• Adaptable to different formations
-
-Physical Attributes:
-• Good pace and acceleration
-• Strong stamina and endurance
-• Adequate strength for position
-• Injury record: ${player.medicalHistory}
-
-Mental Attributes:
-• Strong leadership qualities
-• Excellent work ethic
-• Good decision-making under pressure
-• Team-oriented attitude
-
-RECOMMENDATION
---------------
-Status: ${player.status === 'active' ? 'Available for transfer' : 'Currently ' + player.status}
-Potential: High
-Estimated Value: Market dependent
-Suitability: Excellent addition to squad
-
-ADDITIONAL NOTES
-----------------
-${player.name} demonstrates consistent performance levels and would be a valuable asset to any competitive squad. Strong technical foundation combined with good tactical awareness.
-
-Report Generated: ${new Date().toLocaleDateString()}
-==============================================
-    `.trim();
-  };
-
-  const generateScoutReportCSV = (player: Player): string => {
-    return `Scout Report - ${player.name}
-
-Category,Attribute,Value
-Personal Information,Full Name,${player.name}
-Personal Information,FIFA ID,${player.fifaId}
-Personal Information,Position,${player.position}
-Personal Information,Jersey Number,${player.jerseyNumber}
-Personal Information,Age,${player.age}
-Personal Information,Nationality,${player.nationality}
-Personal Information,Date of Birth,${new Date(player.dateOfBirth).toLocaleDateString()}
-Personal Information,Place of Birth,${player.placeOfBirth}
-
-Physical Attributes,Height,${player.height}
-Physical Attributes,Weight,${player.weight}
-Physical Attributes,Preferred Foot,${player.preferredFoot}
-
-Performance Statistics,Goals,${player.goals}
-Performance Statistics,Assists,${player.assists}
-Performance Statistics,Matches,${player.matches}
-Performance Statistics,Goals per Match,${(player.goals / player.matches).toFixed(2)}
-Performance Statistics,Assists per Match,${(player.assists / player.matches).toFixed(2)}
-
-Contract Information,Contract Expires,${new Date(player.contractExpiry).toLocaleDateString()}
-Contract Information,Status,${player.status}
-Contract Information,Previous Clubs,${player.previousClubs}
-
-Medical,Medical History,${player.medicalHistory}
-
-Emergency Contact,Contact Name,${player.emergencyContact}
-Emergency Contact,Contact Phone,${player.emergencyPhone}
-
-Assessment,Overall Rating,4/5
-Assessment,Technical Skills,Strong
-Assessment,Tactical Awareness,Good
-Assessment,Physical Attributes,Good
-Assessment,Mental Attributes,Strong
-Assessment,Recommendation,Excellent addition to squad
-
-Report Generated,Date,${new Date().toLocaleDateString()}
-    `.trim();
   };
 
   const handleTransferPlayer = () => {
@@ -1012,203 +838,32 @@ Report Generated,Date,${new Date().toLocaleDateString()}
                   <h3 className="text-lg font-semibold text-white mb-4">Medical History</h3>
                   <p className="text-gray-300">{showPlayerProfile.medicalHistory}</p>
                 </div>
-
-                {/* Scout Report */}
-                <div className="lg:col-span-2 bg-gradient-to-br from-blue-900 to-blue-800 p-6 rounded-lg border-2 border-blue-600">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="text-blue-300" size={24} />
-                      <h3 className="text-lg font-semibold text-white">Scout Report</h3>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleExportScoutReportPDF(showPlayerProfile)}
-                        className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
-                        title="Export as Text/PDF"
-                      >
-                        <Download size={16} />
-                        <span>Text</span>
-                      </button>
-                      <button
-                        onClick={() => handleExportScoutReportExcel(showPlayerProfile)}
-                        className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
-                        title="Export as CSV/Excel"
-                      >
-                        <Download size={16} />
-                        <span>CSV</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div className="bg-blue-950 bg-opacity-50 p-4 rounded-lg">
-                      <h4 className="text-blue-300 font-semibold mb-3 flex items-center space-x-2">
-                        <Star size={16} />
-                        <span>Overall Rating</span>
-                      </h4>
-                      <div className="flex items-center space-x-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            size={20}
-                            className={star <= 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}
-                          />
-                        ))}
-                        <span className="ml-2 text-white font-semibold">4.0 / 5.0</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-blue-950 bg-opacity-50 p-4 rounded-lg">
-                      <h4 className="text-blue-300 font-semibold mb-3">Performance Metrics</h4>
-                      <div className="space-y-1 text-sm text-white">
-                        <div className="flex justify-between">
-                          <span className="text-blue-200">Goals/Match:</span>
-                          <span className="font-semibold">{(showPlayerProfile.goals / showPlayerProfile.matches).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-200">Assists/Match:</span>
-                          <span className="font-semibold">{(showPlayerProfile.assists / showPlayerProfile.matches).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-200">Match Fitness:</span>
-                          <span className="font-semibold">{showPlayerProfile.status === 'active' ? 'Excellent' : showPlayerProfile.status}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-blue-300 font-semibold mb-2">Technical Skills</h4>
-                      <ul className="space-y-1 text-sm text-white">
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Strong ball control and dribbling ability</span>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Excellent passing accuracy</span>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Good finishing in the penalty area</span>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Solid aerial ability</span>
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div>
-                      <h4 className="text-blue-300 font-semibold mb-2">Tactical Awareness</h4>
-                      <ul className="space-y-1 text-sm text-white">
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Understands positioning well</span>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Makes intelligent runs off the ball</span>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Good defensive contribution when required</span>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Adaptable to different formations</span>
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div>
-                      <h4 className="text-blue-300 font-semibold mb-2">Physical Attributes</h4>
-                      <ul className="space-y-1 text-sm text-white">
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Good pace and acceleration</span>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Strong stamina and endurance</span>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Adequate strength for position</span>
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div>
-                      <h4 className="text-blue-300 font-semibold mb-2">Mental Attributes</h4>
-                      <ul className="space-y-1 text-sm text-white">
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Strong leadership qualities</span>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Excellent work ethic</span>
-                        </li>
-                        <li className="flex items-start space-x-2">
-                          <span className="text-green-400">✓</span>
-                          <span>Good decision-making under pressure</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 bg-blue-950 bg-opacity-50 p-4 rounded-lg">
-                    <h4 className="text-blue-300 font-semibold mb-2">Scout Recommendation</h4>
-                    <p className="text-white text-sm">
-                      {showPlayerProfile.name} demonstrates consistent performance levels and would be a valuable asset to any competitive squad.
-                      Strong technical foundation combined with good tactical awareness makes this player an excellent addition.
-                      {showPlayerProfile.status === 'active' ? ' Currently available and match-fit.' : ` Current status: ${showPlayerProfile.status}.`}
-                    </p>
-                  </div>
-
-                  <div className="mt-3 text-xs text-blue-300 text-right">
-                    Report generated: {new Date().toLocaleDateString()}
-                  </div>
-                </div>
               </div>
 
-              <div className="flex justify-between mt-6">
+              <div className="flex justify-end space-x-4 mt-6">
                 <button
-                  onClick={() => handleResetPlayerCredentials(showPlayerProfile)}
-                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center space-x-2"
-                  title="Reset player login credentials"
+                  onClick={() => {
+                    setShowPlayerProfile(null);
+                    handleEditPlayer(showPlayerProfile);
+                  }}
+                  className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center space-x-2"
                 >
-                  <Key size={16} />
-                  <span>Reset Login</span>
+                  <Edit size={16} />
+                  <span>Edit Player</span>
                 </button>
-
-                <div className="flex space-x-4">
-                  <button
-                    onClick={() => {
-                      setShowPlayerProfile(null);
-                      handleEditPlayer(showPlayerProfile);
-                    }}
-                    className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center space-x-2"
-                  >
-                    <Edit size={16} />
-                    <span>Edit Player</span>
-                  </button>
-                  <button
-                    onClick={() => setShowTransferModal(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center space-x-2"
-                  >
-                    <Users size={16} />
-                    <span>Transfer</span>
-                  </button>
-                  <button
-                    onClick={() => setShowPlayerProfile(null)}
-                    className="bg-gray-600 hover:bg-gray-500 text-white px-6 py-2 rounded-lg transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowTransferModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center space-x-2"
+                >
+                  <Users size={16} />
+                  <span>Transfer</span>
+                </button>
+                <button
+                  onClick={() => setShowPlayerProfile(null)}
+                  className="bg-gray-600 hover:bg-gray-500 text-white px-6 py-2 rounded-lg transition-colors"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </motion.div>
