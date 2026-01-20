@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, User, MapPin, Building, Lock, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, User, MapPin, Building, Lock, Check, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import SearchableDropdown from '../../components/SearchableDropdown';
 import { countries, Country } from '../../data/countries';
@@ -12,6 +12,8 @@ const ClubSignupMultiStep: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
 
@@ -32,6 +34,7 @@ const ClubSignupMultiStep: React.FC = () => {
     // Step 3: Manager Information
     managerName: '',
     managerEmail: '',
+    managerCountryCode: '+1',
     managerPhone: '',
 
     // Step 4: Security
@@ -170,7 +173,7 @@ const ClubSignupMultiStep: React.FC = () => {
       role: 'club',
       email: formData.managerEmail,
       password: formData.password,
-      phone: formData.managerPhone,
+      phone: `${formData.managerCountryCode} ${formData.managerPhone}`,
       adminName: formData.managerName,
       clubName: formData.clubName,
       clubEmail: formData.managerEmail,
@@ -521,19 +524,31 @@ const ClubSignupMultiStep: React.FC = () => {
                         <label className="block text-gray-300 text-sm font-medium mb-2">
                           Phone Number <span className="text-pink-500">*</span>
                         </label>
-                        <input
-                          type="tel"
-                          name="managerPhone"
-                          value={formData.managerPhone}
-                          onChange={handleChange}
-                          placeholder="+234 XXX XXX XXXX"
-                          className={`w-full bg-gray-800 border ${
-                            errors.managerPhone ? 'border-red-500' : 'border-gray-700'
-                          } rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
-                        />
-                        {errors.managerPhone && (
-                          <p className="mt-1 text-sm text-red-500">{errors.managerPhone}</p>
-                        )}
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <SearchableDropdown
+                              options={countryCodeOptions}
+                              value={formData.managerCountryCode}
+                              onChange={(value) => handleDropdownChange('managerCountryCode', value)}
+                              placeholder="Code"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <input
+                              type="tel"
+                              name="managerPhone"
+                              value={formData.managerPhone}
+                              onChange={handleChange}
+                              placeholder="Phone number"
+                              className={`w-full bg-gray-800 border ${
+                                errors.managerPhone ? 'border-red-500' : 'border-gray-700'
+                              } rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
+                            />
+                            {errors.managerPhone && (
+                              <p className="mt-1 text-sm text-red-500">{errors.managerPhone}</p>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -550,16 +565,30 @@ const ClubSignupMultiStep: React.FC = () => {
                         <label className="block text-gray-300 text-sm font-medium mb-2">
                           Password <span className="text-pink-500">*</span>
                         </label>
-                        <input
-                          type="password"
-                          name="password"
-                          value={formData.password}
-                          onChange={handleChange}
-                          placeholder="Create a strong password"
-                          className={`w-full bg-gray-800 border ${
-                            errors.password ? 'border-red-500' : 'border-gray-700'
-                          } rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
-                        />
+                        <div className="relative">
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            placeholder="Create a strong password"
+                            className={`w-full bg-gray-800 border ${
+                              errors.password ? 'border-red-500' : 'border-gray-700'
+                            } rounded-lg px-4 py-3 pr-12 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                            tabIndex={-1}
+                          >
+                            {showPassword ? (
+                              <EyeOff size={20} />
+                            ) : (
+                              <Eye size={20} />
+                            )}
+                          </button>
+                        </div>
                         {errors.password && (
                           <p className="mt-1 text-sm text-red-500">{errors.password}</p>
                         )}
@@ -572,16 +601,30 @@ const ClubSignupMultiStep: React.FC = () => {
                         <label className="block text-gray-300 text-sm font-medium mb-2">
                           Confirm Password <span className="text-pink-500">*</span>
                         </label>
-                        <input
-                          type="password"
-                          name="confirmPassword"
-                          value={formData.confirmPassword}
-                          onChange={handleChange}
-                          placeholder="Re-enter your password"
-                          className={`w-full bg-gray-800 border ${
-                            errors.confirmPassword ? 'border-red-500' : 'border-gray-700'
-                          } rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
-                        />
+                        <div className="relative">
+                          <input
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            name="confirmPassword"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            placeholder="Re-enter your password"
+                            className={`w-full bg-gray-800 border ${
+                              errors.confirmPassword ? 'border-red-500' : 'border-gray-700'
+                            } rounded-lg px-4 py-3 pr-12 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                            tabIndex={-1}
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff size={20} />
+                            ) : (
+                              <Eye size={20} />
+                            )}
+                          </button>
+                        </div>
                         {errors.confirmPassword && (
                           <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
                         )}
