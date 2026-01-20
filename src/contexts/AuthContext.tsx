@@ -7,7 +7,6 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string, role?: 'club' | 'scout' | 'player' | 'staff') => Promise<boolean>;
   signup: (userData: any) => Promise<boolean>;
-  signInWithGoogle: (role: 'club' | 'scout' | 'player') => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -287,39 +286,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signInWithGoogle = async (role: 'club' | 'scout' | 'player') => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-          scopes: 'email profile'
-        }
-      });
-
-      if (error) {
-        console.error('Google sign-in error:', error.message);
-        alert(`Google sign-in failed: ${error.message}`);
-      }
-
-      localStorage.setItem('pendingOAuthRole', role);
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      alert('An error occurred during Google sign-in');
-    }
-  };
-
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, signInWithGoogle, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
