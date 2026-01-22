@@ -222,6 +222,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
 
+      if (!authData.session) {
+        console.error('Signup warning: No session returned. User may need to confirm email.');
+      }
+
       const userId = authData.user.id;
 
       const { error: profileError } = await supabase
@@ -237,27 +241,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (userData.role === 'club') {
-        const { error: clubError } = await supabase
+        console.log('Creating club record for user:', userId);
+        const { error: clubError, data: clubData } = await supabase
           .from('clubs')
           .insert({
             profile_id: userId,
             club_name: userData.clubName,
             website: userData.website || null,
-            division: userData.division,
+            division: userData.division || null,
             league: userData.league,
             country: userData.country || 'Unknown',
             contact_email: userData.clubEmail || userData.email,
             contact_phone: userData.clubPhone || userData.phone,
             founded_year: userData.foundedYear || null
-          });
+          })
+          .select()
+          .single();
 
         if (clubError) {
-          console.error('Club creation error:', clubError.message);
+          console.error('Club creation error:', clubError);
+          console.error('Club data attempted:', {
+            profile_id: userId,
+            club_name: userData.clubName,
+            league: userData.league,
+            country: userData.country
+          });
           alert(`Failed to create club profile: ${clubError.message}`);
           return false;
         }
+
+        console.log('Club created successfully:', clubData);
       } else if (userData.role === 'scout') {
-        const { error: scoutError } = await supabase
+        console.log('Creating scout record for user:', userId);
+        const { error: scoutError, data: scoutData } = await supabase
           .from('scouts')
           .insert({
             profile_id: userId,
@@ -266,13 +282,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             fifa_licence_number: userData.fifaLicenceNumber || null,
             country: userData.country || 'Unknown',
             preferred_leagues: userData.preferredLeague ? [userData.preferredLeague] : []
-          });
+          })
+          .select()
+          .single();
 
         if (scoutError) {
-          console.error('Scout creation error:', scoutError.message);
+          console.error('Scout creation error:', scoutError);
+          console.error('Scout data attempted:', {
+            profile_id: userId,
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+            country: userData.country
+          });
           alert(`Failed to create scout profile: ${scoutError.message}`);
           return false;
         }
+
+        console.log('Scout created successfully:', scoutData);
       }
 
       await loadUserData(authData.user);
